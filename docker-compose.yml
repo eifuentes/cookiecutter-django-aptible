@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - "INSTALL_DEV=true"
+    image: djangoaptible:0.1.0-dev
+    command: bash -c "python manage.py collectstatic --no-input && python manage.py migrate && exec gunicorn --access-logfile=- --error-logfile=- --bind=0.0.0.0:8000 --workers=3 config.wsgi:application"
+    volumes:
+      - .:/code
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    environment:
+      - "DJANGO_SECRET_KEY=havKiNH6SvKRLOeBdXCA0oeRLpHZKtL6qKg3Y8WDa08Z65_sc8g"
+      - "DJANGO_DEBUG=True"
+      - "DJANGO_SECURE_SSL_REDIRECT=False"
+      - "DJANGO_SECURE_HSTS_SECONDS=0"
+      - "DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS=False"
+      - "DJANGO_SECURE_HSTS_PRELOAD=False"
+      - "DJANGO_SESSION_COOKIE_SECURE=False"
+      - "DJANGO_CSRF_COOKIE_SECURE=False"
+  db:
+    image: postgres:11
+    volumes:
+      - pgdevdata:/var/lib/postgresql/data/
+    environment:
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+
+volumes:
+  pgdevdata:
